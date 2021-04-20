@@ -8,6 +8,7 @@ using namespace std;
 struct Node
 {
 	int value;
+	int inQueue = 0;
 	Node* next;
 	Node* previous;
 };
@@ -48,9 +49,28 @@ void ADD_END(Node** head, Node** tail, int value, int& size)
 	size++;
 }
 
-void DEL_BEG(Node** head, Node** tail, int& size)
+void DEL_BEG(Node** head, Node** tail, Node** front, Node** rear, int& size, int& count)
 {
 	if (*head == NULL) return;
+	//queue management
+	if ((*head)->inQueue == 1) count--;
+	if (*front == *head || *rear == *head)
+	{
+		//when there is only one element
+		if (count == 1)
+		{
+			*rear = NULL;
+			*front = NULL;
+		}
+		else if (*head == *front)
+		{
+			*front = *tail;
+		}
+		else if (*head == *rear)
+		{
+			*rear = (*rear)->next;
+		}
+	}
 	if (*head == *tail)
 	{
 		Node* old = *head;
@@ -68,9 +88,29 @@ void DEL_BEG(Node** head, Node** tail, int& size)
 	size--;
 }
 
-void DEL_END(Node** head, Node** tail, int& size)
+void DEL_END(Node** head, Node** tail, Node** front, Node** rear, int& size, int& count)
 {
 	if (*tail == NULL) return;
+	//queue management
+	if ((*tail)->inQueue == 1) count--;
+	if (*front == *tail || *rear == *tail)
+	{
+		//when there is only one element
+		if (count == 1)
+		{
+			*rear = NULL;
+			*front = NULL;
+		}
+		else if (*tail == *front)
+		{
+			*front = (*front)->previous;
+		}
+		else if (*tail == *rear)
+		{
+			*rear = *head;
+		}
+	}
+	//deletion
 	if (*head == *tail)
 	{
 		Node* old = *head;
@@ -96,6 +136,19 @@ void SIZE(int size)
 void COUNT(int count)
 {
 	cout << count << endl;
+}
+
+void GARBAGE_SOFT(Node** head)
+{
+	if (*head == NULL) return;
+	Node* curr = *head;
+	Node* next;
+	while (curr != NULL)
+	{
+		if (curr->inQueue == 0) curr->value = 0;
+		next = curr->next;
+		curr = next;
+	}
 }
 
 void PRINT_FORWARD(Node* head)
@@ -142,6 +195,7 @@ void PUSH(Node** head, Node** tail, Node** front, Node** rear, int value, int& s
 		ADD_END(head, tail, value, size);
 		*front = *head;
 		*rear = *tail;
+		(*tail)->inQueue = 1;
 	}
 	//when the queue is full
 	else if (size == count)
@@ -151,11 +205,13 @@ void PUSH(Node** head, Node** tail, Node** front, Node** rear, int value, int& s
 		{
 			ADD_BEG(head, tail, value, size);
 			*rear = *head;
+			(*head)->inQueue = 1;
 		}
 		//when they cross
 		else
 		{
 			Node* newNode = new Node;
+			newNode->inQueue = 1;
 			newNode->value = value;
 			newNode->next = *rear;
 			newNode->previous = *front;
@@ -173,6 +229,7 @@ void PUSH(Node** head, Node** tail, Node** front, Node** rear, int value, int& s
 			*rear = *tail;
 			*front = *tail;
 			(*rear)->value = value;
+			(*rear)->inQueue = 1;
 		}
 		else
 		{
@@ -180,11 +237,13 @@ void PUSH(Node** head, Node** tail, Node** front, Node** rear, int value, int& s
 			{
 				*rear = *tail;
 				(*rear)->value = value;
+				(*rear)->inQueue = 1;
 			}
 			else
 			{
 				*rear = (*rear)->previous;
 				(*rear)->value = value;
+				(*rear)->inQueue = 1;
 			}
 		}
 	}
@@ -244,7 +303,7 @@ void PRINT_QUEUE(Node* head, Node* tail, Node* front, Node* rear)
 	cout << endl;
 }
 
-int Choice(string command)
+int Choice(const string command)
 {
 	string arr[13] = { "ADD_BEG", "ADD_END", "DEL_BEG", "DEL_END", "PRINT_FORWARD",
 	"PRINT_BACKWARD", "SIZE", "PUSH", "POP", "PRINT_QUEUE", "COUNT", "GARBAGE_SOFT",
@@ -283,10 +342,10 @@ int main()
 			ADD_END(&head, &tail, value, size);
 			break;
 		case 2:
-			DEL_BEG(&head, &tail, size);
+			DEL_BEG(&head, &tail, &front, &rear, size, count);
 			break;
 		case 3:
-			DEL_END(&head, &tail, size);
+			DEL_END(&head, &tail, &front, &rear, size, count);
 			break;
 		case 4:
 			PRINT_FORWARD(head);
@@ -311,7 +370,7 @@ int main()
 			COUNT(count);
 			break;
 		case 11:
-			//GARBAGE_SOFT
+			GARBAGE_SOFT(&head);
 			break;
 		case 12:
 			//GARBAGE_HARD
