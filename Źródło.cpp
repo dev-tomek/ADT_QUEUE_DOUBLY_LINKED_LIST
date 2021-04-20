@@ -71,6 +71,7 @@ void DEL_BEG(Node** head, Node** tail, Node** front, Node** rear, int& size, int
 			*rear = (*rear)->next;
 		}
 	}
+	//deletion
 	if (*head == *tail)
 	{
 		Node* old = *head;
@@ -147,6 +148,59 @@ void GARBAGE_SOFT(Node** head)
 	{
 		if (curr->inQueue == 0) curr->value = 0;
 		next = curr->next;
+		curr = next;
+	}
+}
+
+void GARBAGE_HARD(Node** head, Node** tail, int& size)
+{
+	if (*head == NULL) return;
+	Node* curr = *head;
+	Node* next;
+	while (curr != NULL)
+	{
+		if (curr->inQueue == 0)
+		{
+			//one element
+			if (*head == *tail)
+			{
+				Node* old = *head;
+				*head = nullptr;
+				*tail = nullptr;
+				delete old;
+				size--;
+				return;
+			}
+			//at the beginning
+			else if (curr == *head)
+			{
+				Node* old = *head;
+				*head = (*head)->next;
+				(*head)->previous = NULL;
+				delete old;
+				next = *head;
+				size--;
+			}
+			else if (curr == *tail)
+			{
+				Node* old = *tail;
+				*tail = (*tail)->previous;
+				(*tail)->next = NULL;
+				delete old;
+				size--;
+				return;
+			}
+			else
+			{
+				Node* old = curr;
+				curr->next->previous = curr->previous;
+				curr->previous->next = curr->next;
+				next = curr->next;
+				delete old;
+				size--;
+			}
+		}
+		else next = curr->next;
 		curr = next;
 	}
 }
@@ -373,7 +427,7 @@ int main()
 			GARBAGE_SOFT(&head);
 			break;
 		case 12:
-			//GARBAGE_HARD
+			GARBAGE_HARD(&head, &tail, size);
 			break;
 		case -1:
 			cout << "Wrong command" << endl;
